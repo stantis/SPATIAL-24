@@ -2,8 +2,8 @@
 library(spotifyr) #note masking of functions by tidyr and geniusr
 library(lubridate); library(stringr); library(ggpubr); library(dplyr); 
 library(ggcorrplot); library(viridis); library(factoextra); library(ggplot2)
-Sys.setenv(SPOTIFY_CLIENT_ID = '4c68298e87354618890421deb9b9600f')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = 'aedebb1b3d854acca746dd9e6848f4e9')
+Sys.setenv(SPOTIFY_CLIENT_ID = 'KEY HERE')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'KEY HERE')
 
 access_token <- get_spotify_access_token()
 authorization_code <- get_spotify_authorization_code(scope = scopes()[c(7,8,9,10,14,15)])
