@@ -1,16 +1,66 @@
 # (run DanceParty first)
+# or read output of DanceParty rds
+
+everyone <- readRDS("input/everyone.rds")
 
 library(mdatools); library(tidyr)
 
 # let's only do numeric values for now
-variables <- c("danceability", "tempo", "valence", "track.explicit", "track.popularity", 
-               "instrumentalness", "acousticness", "liveness", "time_signature", 
-               "energy", "key", "loudness", "speechiness", "release_year")
+variables <- c("danceability", "tempo", "valence", "track.popularity", 
+               "instrumentalness", "acousticness", "liveness",  
+               "energy", "loudness", "speechiness", "release_year")
 
 everyonePCA <- as.data.frame(everyone) %>% 
   select(c(variables, person)) %>% 
-  mutate(person = factor(person)) %>% 
+  #mutate(person = factor(person)) %>% 
   drop_na()
+
+# pca
+
+evry.pca <- prcomp(everyonePCA[, -12], scale = TRUE)
+
+# plot pca
+
+mycolors <- c("#54086B", "#FF0BAC", "#00BEC5", "#E34234")
+names(mycolors) <- levels(everyone$person)
+
+fviz_pca_biplot(evry.pca, label="var", habillage = everyonePCA$person, 
+             addEllipses=TRUE, ellipse.level=0.68)+
+  theme_minimal()+
+  scale_color_manual(values = mycolors)+
+  scale_fill_manual(values = mycolors)+
+  NULL
+
+#### pca without release year ####
+
+# let's only do numeric values for now
+variables <- c("danceability", "tempo", "valence", "track.popularity", 
+               "instrumentalness", "acousticness", "liveness",  
+               "energy", "loudness", "speechiness")
+
+everyonePCA <- as.data.frame(everyone) %>% 
+  select(c(variables, person)) %>% 
+  #mutate(person = factor(person)) %>% 
+  drop_na()
+
+# pca
+
+evry.pca <- prcomp(everyonePCA[, -11], scale = TRUE)
+
+# plot pca
+
+mycolors <- c("#54086B", "#FF0BAC", "#00BEC5", "#E34234")
+names(mycolors) <- levels(everyone$person)
+
+fviz_pca_biplot(evry.pca, label="var", habillage = everyonePCA$person, 
+                addEllipses=TRUE, ellipse.level=0.68)+
+  theme_minimal()+
+  scale_color_manual(values = mycolors)+
+  scale_fill_manual(values = mycolors)+
+  NULL
+
+
+###############
 
 chrisPCA <- chris %>% select(c(variables)) 
 sarahPCA <- sarah %>% select(c(variables))
