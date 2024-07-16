@@ -3,7 +3,8 @@
 
 everyone <- readRDS("input/everyone.rds")
 
-library(mdatools); library(tidyverse); library(factoextra); library(MASS); library(ggordiplots)
+library(mdatools); library(tidyverse); library(factoextra); library(MASS); library(ggordiplots); 
+library(nicheROVER)
 
 # let's only do numeric values for now
 variables <- c("danceability", "tempo", "valence", "track.popularity", 
@@ -80,6 +81,46 @@ lda_ordiplot+
   scale_color_manual(values = mycolors)+
   scale_fill_manual(values = mycolors)+
   NULL
+
+#### NicheROVER ####
+
+# let's only do numeric values for now
+variables_nicherover <- c("danceability", "valence", "track.popularity", 
+               "instrumentalness", "acousticness", "liveness",  
+               "energy", "loudness", "speechiness", "release_year")
+
+everyone_niche <- as.data.frame(everyone) %>% 
+  dplyr::select(c(variables_nicherover, person)) %>% 
+  #mutate(person = factor(person)) %>% 
+  drop_na()
+
+# 2-d projections of 10 niche regions
+#clrs <- c("black", "red", "blue", "orange") # colors for each species
+nsamples <- 10
+evry_par <- tapply(1:nrow(everyone_niche), everyone_niche$person,
+                   function(ii) niw.post(nsamples = nsamples, X = everyone_niche[ii,1:10]))
+
+# format data for plotting function
+evry_data <- tapply(1:nrow(everyone_niche), everyone_niche$person, function(ii) X = everyone_niche[ii,1:10])
+
+niche.plot(niche.par = evry_par, niche.data = evry_data, pfrac = .05,
+          # iso.names = expression(delta^{15}*N, delta^{13}*C, delta^{34}*S),
+           col = mycolors)
+
+# niche overlap plots for 95% niche region sizes
+nsamples <- 1000
+evry_par <- tapply(1:nrow(everyone_niche), everyone_niche$person,
+                   function(ii) niw.post(nsamples = nsamples, X = everyone_niche[ii,1:10]))
+
+# Overlap calculation.  use nsamples = nprob = 10000 (1e4) for higher accuracy.
+# the variable over.stat can be supplied directly to the overlap.plot function
+
+over_stat <- overlap(evry_par, nreps = nsamples, nprob = 1e3, alpha = c(.95, 0.99))
+
+#The mean overlap metrics calculated across iteratations for both niche 
+#region sizes (alpha = .95 and alpha = .99) can be calculated and displayed in an array.
+over_mean <- apply(over_stat, c(1:2,4), mean)*100
+round(over_mean, 2)
 
 
 ############### Chris' code
