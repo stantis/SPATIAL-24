@@ -38,7 +38,7 @@ dustin <- dustin %>%
 
 # Chris' Playlists Pull ---------------------------------------------------
 
-ids <- c(dplyr::filter(chris_playlists, grepl("Your Top Songs",name))$id) #his are named 'Tops20XX'
+ids <- c(dplyr::filter(chris_playlists, grepl("Your Top Songs",name))$id) #mine are named 'Your Top Songs'
 
 chris <- get_playlist_audio_features('12135699044', ids, 
                                       authorization = authorization_code[["credentials"]][["access_token"]])
