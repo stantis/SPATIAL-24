@@ -3,7 +3,7 @@
 
 everyone <- readRDS("input/everyone.rds")
 
-library(mdatools); library(tidyr)
+library(mdatools); library(tidyverse); library(factoextra); library(MASS); library(ggordiplots)
 
 # let's only do numeric values for now
 variables <- c("danceability", "tempo", "valence", "track.popularity", 
@@ -59,8 +59,30 @@ fviz_pca_biplot(evry.pca, label="var", habillage = everyonePCA$person,
   scale_fill_manual(values = mycolors)+
   NULL
 
+#### linear discriminant analysis ####
 
-###############
+# lda data needs to be scaled
+
+lda_data <- everyonePCA
+
+lda_data[,1:10] <- scale(lda_data[,1:10])
+
+lda_model <- MASS::lda(person ~ ., data=lda_data)
+
+lda_model
+
+lda_ordi <- gg_ordiplot(lda_model, groups = everyonePCA$person, pt.size = 2, conf = 0.68)
+
+lda_ordiplot <- lda_ordi$plot
+
+lda_ordiplot+
+  theme_minimal()+
+  scale_color_manual(values = mycolors)+
+  scale_fill_manual(values = mycolors)+
+  NULL
+
+
+############### Chris' code
 
 chrisPCA <- chris %>% select(c(variables)) 
 sarahPCA <- sarah %>% select(c(variables))
