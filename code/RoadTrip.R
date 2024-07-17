@@ -178,7 +178,114 @@ for (i in 1:25) {
 
 playlist_overlap_40 <- cbind(all_overlap_songs$track.name, artists)
 
-####
+#### at 95% look at % songs outside everyone elses ellipse ####
+
+# draw the ellipse
+
+ell_pca <- ggplot(points_on_pca, aes(x = PC1, y = PC2, color = person, fill = person))+
+  theme_minimal()+
+  geom_point()+
+  scale_color_manual(values = mycolors)+
+  scale_fill_manual(values = mycolors)+
+  stat_ellipse(geom = "polygon", level = 0.95, alpha = 0.2)+
+  xlim(-4,8)+
+  ylim(-4,5)+
+  NULL
+
+# test if points are inside ellipse
+
+everyone_clean <- as.data.frame(everyone) %>% 
+  #dplyr::select(c(variables, person)) %>% 
+  #mutate(person = factor(person)) %>% 
+  drop_na(variables)
+
+# Extract components
+build <- ggplot_build(ell_pca)$data
+points <- build[[1]]
+ellipses <- build[[2]]
+
+col_v_peeps <- data.frame(colour = mycolors, person = ellipse_means$person)
+
+points_p <- left_join(points, col_v_peeps, by = "colour")
+ellipses_p <- left_join(ellipses, col_v_peeps, by = "colour")
+
+evry_gg_ellipse_out <- everyone_clean
+
+evry_gg_out_pca <- points_on_pca
+
+for (i in 1:4) {
+  
+  p_name <- ellipse_means$person[i]
+  
+  ellipse_sub <- ellipses_p %>% 
+    filter(person == p_name)
+  
+  in_ell <- data.frame(
+    in_ell = as.logical(point.in.polygon(points$x, points$y, ellipse_sub$x, ellipse_sub$y))
+  )
+  
+  names(in_ell) <- paste("song_in_ellipse", p_name, sep = "_")
+  
+  evry_gg_ellipse_out <- cbind(evry_gg_ellipse_out, in_ell)
+  
+  evry_gg_out_pca <- cbind(evry_gg_out_pca, in_ell)
+  
+}
+
+#### find songs without overlap ###
+
+songs_unique_Chris <- evry_gg_ellipse_out %>%
+  filter(person == "Chris" &
+           song_in_ellipse_Dustin == FALSE &
+           song_in_ellipse_Sarah == FALSE &
+           song_in_ellipse_Spencer == FALSE) %>%
+  mutate(unique_to = "Chris")
+
+songs_unique_Dustin <- evry_gg_ellipse_out %>%
+  filter(person == "Dustin" &
+           song_in_ellipse_Chris == FALSE &
+           song_in_ellipse_Sarah == FALSE &
+           song_in_ellipse_Spencer == FALSE) %>%
+  mutate(unique_to = "Dustin")
+
+songs_unique_Sarah <- evry_gg_ellipse_out %>%
+  filter(person == "Sarah" &
+           song_in_ellipse_Dustin == FALSE &
+           song_in_ellipse_Sarah == FALSE &
+           song_in_ellipse_Spencer == FALSE) %>%
+  mutate(unique_to = "Sarah")
+
+songs_unique_Spencer <- evry_gg_ellipse_out %>%
+  filter(person == "Spencer" &
+           song_in_ellipse_Dustin == FALSE &
+           song_in_ellipse_Sarah == FALSE &
+           song_in_ellipse_Spencer == FALSE) %>%
+  mutate(unique_to = "Spencer")
+
+all_uniqueness <- rbind(songs_unique_Chris, 
+                        songs_unique_Dustin, 
+                        songs_unique_Sarah, 
+                        songs_unique_Spencer)
+
+no_songs <- everyonePCA %>%
+  group_by(person) %>%
+  summarise(n_total = n())
+
+uniqueness_summary <- all_uniqueness %>%
+  group_by(unique_to) %>%
+  summarise(n_unique = n()) %>%
+  rename(person = unique_to) %>%
+  left_join(., no_songs, by = "person") %>%
+  mutate(perc_unique_songs = 100/n_total*n_unique)
+
+songs_unique_Spencer$track.name
+
+songs_unique_Sarah$track.name
+
+ggplot(uniqueness_summary, aes(person, perc_unique_songs, fill = person))+
+  theme_minimal()+
+  geom_col()+
+  scale_fill_manual(values = mycolors)
 
 
 #### pca without release year ####
