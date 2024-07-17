@@ -12,7 +12,7 @@ variables <- c("danceability", "tempo", "valence", "track.popularity",
                "energy", "loudness", "speechiness", "release_year")
 
 everyonePCA <- as.data.frame(everyone) %>% 
-  select(c(variables, person)) %>% 
+  dplyr::select(c(variables, person)) %>% 
   #mutate(person = factor(person)) %>% 
   drop_na()
 
@@ -115,12 +115,59 @@ evry_par <- tapply(1:nrow(everyone_niche), everyone_niche$person,
 # Overlap calculation.  use nsamples = nprob = 10000 (1e4) for higher accuracy.
 # the variable over.stat can be supplied directly to the overlap.plot function
 
-over_stat <- overlap(evry_par, nreps = nsamples, nprob = 1e3, alpha = c(.95, 0.99))
+over_stat <- overlap(evry_par, nreps = nsamples, nprob = 1e3, alpha = c(.95))
 
 #The mean overlap metrics calculated across iteratations for both niche 
 #region sizes (alpha = .95 and alpha = .99) can be calculated and displayed in an array.
 over_mean <- apply(over_stat, c(1:2,4), mean)*100
 round(over_mean, 2)
+
+overlap.plot(over_stat, col = mycolors, mean.cred.col = "black", equal.axis = TRUE,
+             xlab = "Overlap Probability (%) -- Niche Region Size: 95%")
+
+## overlap plots in ggplot ##
+
+over_stat_df <- over_stat %>% 
+  as_tibble(rownames = "person_a") %>% 
+  mutate(
+    id = 1:nrow(.), 
+    person_a = factor(person_a, 
+                       level = c("Chris", "Dustin", "Sarah", "Spencer"))
+  ) %>% 
+  pivot_longer(cols = -c(id, person_a), 
+               names_to = "person_b", 
+               values_to = "mc_nr")  %>% 
+  separate(species_b, into = c("person_c", "sample_number"), 
+           sep = "\\.") %>% 
+  select(-id) %>% 
+  rename(species_b = species_c) %>% 
+  mutate(
+    species_b =  factor(species_b, 
+                        level = c("Chris", "Dustin", "Sarah", "Spencer")
+    ), 
+    mc_nr_perc = mc_nr * 100
+  )
+
+### niche sizes ####
+
+# posterior distribution of niche size by species
+niche_size <- sapply(evry_par, function(spec) {
+  apply(spec$Sigma, 3, niche.size, alpha = .95)
+})
+
+# point estimate and standard error
+rbind(est = colMeans(niche_size),
+      se = apply(niche_size, 2, sd))
+
+niche_size %>%
+  as.data.frame(.) %>%
+  pivot_longer(cols = 1:4, names_to = "person", values_to = "niche_size_est") %>%
+  ggplot(., )+
+  geom_violin(aes(x = person, y = niche_size_est, color = person, fill = person)) +
+  theme_minimal()+
+  scale_color_manual(values = mycolors)+
+  scale_fill_manual(values = mycolors)+
+  NULL
 
 
 ############### Chris' code
