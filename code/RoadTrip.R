@@ -4,7 +4,7 @@
 everyone <- readRDS("input/everyone.rds")
 
 library(mdatools); library(tidyverse); library(factoextra); library(MASS); library(ggordiplots); 
-library(nicheROVER); library(SIBER); library(sp)
+library(nicheROVER); library(ggh4x); library(sp)
 
 # let's only do numeric values for now
 variables <- c("danceability", "tempo", "valence", "track.popularity", 
@@ -384,18 +384,18 @@ overlap.plot(over_stat, col = mycolors, mean.cred.col = "black", equal.axis = TR
 ## overlap plots in ggplot ##
 
 over_stat_df <- over_stat %>% 
-  as_tibble(rownames = "person_a") %>% 
+  as_tibble(rownames = "species_a") %>% 
   mutate(
     id = 1:nrow(.), 
-    person_a = factor(person_a, 
+    species_a = factor(species_a, 
                        level = c("Chris", "Dustin", "Sarah", "Spencer"))
   ) %>% 
-  pivot_longer(cols = -c(id, person_a), 
-               names_to = "person_b", 
+  pivot_longer(cols = -c(id, species_a), 
+               names_to = "species_b", 
                values_to = "mc_nr")  %>% 
-  separate(species_b, into = c("person_c", "sample_number"), 
+  separate(species_b, into = c("species_c", "sample_number"), 
            sep = "\\.") %>% 
-  select(-id) %>% 
+  dplyr::select(-id) %>% 
   rename(species_b = species_c) %>% 
   mutate(
     species_b =  factor(species_b, 
@@ -403,6 +403,66 @@ over_stat_df <- over_stat %>%
     ), 
     mc_nr_perc = mc_nr * 100
   )
+
+over_sum <- over_stat_df %>% 
+  group_by(species_a, species_b) %>% 
+  summarise(
+    mean_mc_nr = round(mean(mc_nr_perc), digits = 2),
+    qual_2.5 = round(quantile(mc_nr_perc, probs = 0.025, na.rm = TRUE), digits = 2), 
+    qual_97.5 = round(quantile(mc_nr_perc, probs = 0.975, na.rm = TRUE), digits = 2)
+  ) %>% 
+  ungroup() %>% 
+  pivot_longer(cols = -c(species_a, species_b, mean_mc_nr), 
+               names_to = "percentage", 
+               values_to = "mc_nr_qual") %>% 
+  mutate(
+    percentage = as.numeric(str_remove(percentage, "qual_"))
+  ) 
+
+ggplot(data = over_stat_df, aes(x = mc_nr_perc)) + 
+  geom_density(aes(fill = species_a)) + 
+  geom_vline(data = over_sum, aes(xintercept = mean_mc_nr), 
+             colour = "black", linewidth = 1) +
+  geom_vline(data = over_sum, aes(xintercept = mc_nr_qual), 
+             colour = "black", linewidth = 1, linetype = 6) +
+  scale_fill_manual(values = mycolors) + 
+  ggh4x::facet_grid2(species_a ~ species_b, 
+                     independent = "y",
+                     scales = "free_y") + 
+  theme_bw() + 
+  theme(
+    panel.grid = element_blank(), 
+    axis.text = element_text(colour = "black"), 
+    legend.background = element_blank(),
+    strip.background = element_blank()
+  ) +
+  xlim(0,100)+
+  labs(x = paste("Overlap Probability (%)", "\u2013", 
+                 "Niche Region Size: 95%"), 
+       y = "p(Percent Overlap | X)")
+
+
+ggplot(data = over_stat_df, aes(x = mc_nr_perc)) + 
+  geom_density(aes(fill = species_a), alpha = 0.6) + 
+  # geom_vline(data = over_sum, aes(xintercept = mean_mc_nr), 
+  #            colour = "black", linewidth = 1) +
+  # geom_vline(data = over_sum, aes(xintercept = mc_nr_qual), 
+  #            colour = "black", linewidth = 1, linetype = 6) +
+  scale_fill_manual(values = mycolors) + 
+  ggh4x::facet_wrap2( ~ species_b,
+                     scales = "free_y") + 
+  theme_bw() + 
+  theme(
+    panel.grid = element_blank(), 
+    axis.text = element_text(colour = "black"), 
+    legend.background = element_blank(),
+    strip.background = element_blank(), 
+    legend.position = "",
+  ) +
+  xlim(0,100)+
+  labs(x = paste("Overlap Probability (%)", "\u2013", 
+                 "Niche Region Size: 95%"), 
+       y = "p(Percent Overlap | X)")
 
 ### niche sizes ####
 
