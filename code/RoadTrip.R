@@ -25,12 +25,15 @@ evry.pca <- prcomp(everyonePCA[, -12], scale = TRUE)
 mycolors <- c("#54086B", "#FF0BAC", "#00BEC5", "#E34234")
 names(mycolors) <- levels(everyone$person)
 
-fviz_pca_biplot(evry.pca, label="var", habillage = everyonePCA$person, 
-             addEllipses=TRUE, ellipse.level=0.95)+
+pca_plot <- fviz_pca_biplot(evry.pca, label="var", habillage = everyonePCA$person, 
+             addEllipses=TRUE, ellipse.level=0.95, col.var = "black")+
   theme_minimal()+
   scale_color_manual(values = mycolors)+
   scale_fill_manual(values = mycolors)+
+  theme(legend.position = "")+
   NULL
+
+ggsave(pca_plot, filename= "output/PCA_plot.png", dpi = 150, width = 15, height = 15, units = "cm")
 
 #### recreate PCA ellipses using SIBER to filter points within and without
 
@@ -79,7 +82,11 @@ ell_pca <- ggplot(points_on_pca, aes(x = PC1, y = PC2, color = person, fill = pe
   stat_ellipse(geom = "polygon", level = 0.40, alpha = 0.2)+
   xlim(-4,8)+
   ylim(-4,5)+
+  theme(legend.position = "")+
   NULL
+
+# ggsave(ell_pca, filename= "output/clean_pca_plot.png", 
+#        dpi = 200, width = 20, height = 20, units = "cm")
 
 # test if points are inside ellipse
 
@@ -143,20 +150,26 @@ all_overlap_songs_pca <- evry_gg_out_pca %>%
   filter(song_in_ellipse_Chris == TRUE &
            song_in_ellipse_Dustin == TRUE &
            song_in_ellipse_Sarah == TRUE &
-           song_in_ellipse_Spencer == TRUE)
+           song_in_ellipse_Spencer == TRUE) %>%
+  cbind(., all_overlap_songs$track.name)
 
-ggplot()+
+playlist_plot <- ggplot()+
   theme_minimal()+
-  geom_point(data = evry_gg_out_pca, aes(x = PC1, y = PC2, color = person))+
+  geom_point(data = evry_gg_out_pca, aes(x = PC1, y = PC2, color = person), alpha = 0.3)+
   scale_fill_manual(values = mycolors)+
   scale_color_manual(values = mycolors)+
   stat_ellipse(data = evry_gg_out_pca, 
                geom = "polygon", aes(x = PC1, y = PC2, fill = person, color = person), 
                level = 0.40, alpha = 0.1)+
   geom_point(data = all_overlap_songs_pca, aes(x = PC1, y = PC2), color = "black")+
+  geom_text(data = all_overlap_songs_pca, aes(x = PC1, y = PC2, label = track.name))
   xlim(-4,8)+
   ylim(-4,5)+
+  theme(legend.position = "")+
   NULL
+
+ggsave(playlist_plot, filename= "output/overlap_playlist_plot.png", 
+       dpi = 200, width = 20, height = 20, units = "cm")
 
 overlap_40_clean <- as.data.frame(all_overlap_songs) %>% 
     dplyr::select(c(variables, person)) %>%
@@ -176,7 +189,9 @@ for (i in 1:25) {
   
 }
 
-playlist_overlap_40 <- cbind(all_overlap_songs$track.name, artists)
+saveRDS(all_overlap_songs, "output/playlist_of_overlap_songs.rds")
+
+playlist_overlap_40 <- cbind(all_overlap_songs$track.name, artists, all_overlap_songs$person)
 
 #### at 95% look at % songs outside everyone elses ellipse ####
 
@@ -282,10 +297,17 @@ songs_unique_Spencer$track.name
 
 songs_unique_Sarah$track.name
 
-ggplot(uniqueness_summary, aes(person, perc_unique_songs, fill = person))+
+songs_unique_Sarah$track.album.name
+
+unique_songs_plot <- ggplot(uniqueness_summary, aes(person, perc_unique_songs, fill = person))+
   theme_minimal()+
   geom_col()+
-  scale_fill_manual(values = mycolors)
+  scale_fill_manual(values = mycolors)+
+  theme(legend.position = "")+
+  labs(x = "Person", y = "% songs outside all other niches")
+
+ggsave(unique_songs_plot, filename= "output/unique_songs_plot.png", 
+       dpi = 150, width = 15, height = 15, units = "cm")
 
 
 #### pca without release year ####
@@ -442,7 +464,7 @@ ggplot(data = over_stat_df, aes(x = mc_nr_perc)) +
        y = "p(Percent Overlap | X)")
 
 
-ggplot(data = over_stat_df, aes(x = mc_nr_perc)) + 
+overlap_prop_plot <- ggplot(data = over_stat_df, aes(x = mc_nr_perc)) + 
   geom_density(aes(fill = species_a), alpha = 0.6) + 
   # geom_vline(data = over_sum, aes(xintercept = mean_mc_nr), 
   #            colour = "black", linewidth = 1) +
@@ -463,6 +485,9 @@ ggplot(data = over_stat_df, aes(x = mc_nr_perc)) +
   labs(x = paste("Overlap Probability (%)", "\u2013", 
                  "Niche Region Size: 95%"), 
        y = "p(Percent Overlap | X)")
+
+ggsave(overlap_prop_plot, filename = "output/who_should_make_the_playlist.png", 
+       width = 20, height = 15, units = "cm", dpi = 150)
 
 ### niche sizes ####
 
