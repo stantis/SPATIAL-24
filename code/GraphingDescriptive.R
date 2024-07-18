@@ -109,3 +109,41 @@ i <- ggplot(data = everyone) +
        y = "Track Duration (s)")
 
 ggarrange(a, b, c, d, e, f, g, h, i, ncol = 3, nrow = 3)
+
+
+# Density Plots -----------------------------------------------------------
+
+ggplot() + 
+  geom_density(data = everyone, aes(x = release_year, fill = person), alpha = 0.5) + 
+  scale_fill_manual(values = mycolors) +
+  scale_color_manual(values = mycolors) + 
+  theme_classic() + 
+  labs(x = "Release Year", 
+       y = "")
+
+ggplot() + 
+  geom_density(data = everyone, aes(x = track.duration_ms, fill = person), alpha = 0.5) + 
+  scale_fill_manual(values = mycolors) +
+  scale_color_manual(values = mycolors) + 
+  theme_classic() + 
+  labs(x = "Track Duration", 
+       y = "")
+
+ggplot() + 
+  geom_density(data = everyone, aes(x = valence, fill = person), alpha = 0.5) + 
+  scale_fill_manual(values = mycolors) +
+  scale_color_manual(values = mycolors) + 
+  theme_classic() + 
+  labs(x = "Valence", 
+       y = "")
+
+ggplot() + 
+  geom_density(data = everyone, aes(x = danceability, fill = person), alpha = 0.5) + 
+  scale_fill_manual(values = mycolors) +
+  scale_color_manual(values = mycolors) + 
+  theme_classic() + 
+  labs(x = "Danceability", 
+       y = "")
+
+ggplot() + 
+  geom_point(data = subset(everyone, person == 'Sarah'), aes(x = loudness, y = valence))

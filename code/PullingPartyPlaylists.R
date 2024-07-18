@@ -4,8 +4,8 @@ library(lubridate); library(stringr); library(ggpubr); library(dplyr);
 library(ggcorrplot); library(viridis); library(factoextra); library(ggplot2); 
 library(tidyr); library(mdatools)
 
-Sys.setenv(SPOTIFY_CLIENT_ID = 'YOURKEY')
-Sys.setenv(SPOTIFY_CLIENT_SECRET = 'YOURKEY')
+Sys.setenv(SPOTIFY_CLIENT_ID = '4c68298e87354618890421deb9b9600f')
+Sys.setenv(SPOTIFY_CLIENT_SECRET = 'aedebb1b3d854acca746dd9e6848f4e9')
 
 access_token <- get_spotify_access_token()
 authorization_code <- get_spotify_authorization_code(scope = scopes()[c(7,8,9,10,14,15)])
@@ -33,7 +33,7 @@ spotifyPCA <- as.data.frame(spotify) %>%
   mutate(playlist_name_simp = factor(playlist_name_simp)) %>% 
   drop_na()
 
-idx = seq(1, nrow(spotifyPCA), by = 8)
+idx = seq(1, nrow(everyone), by = 8)
 
 # split the values
 Xc = spotifyPCA[-idx, 1:14] 
