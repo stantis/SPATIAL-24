@@ -1,6 +1,6 @@
 # devtools::install_github('charlie86/spotifyr')
 library(spotifyr) #note masking of functions by tidyr and geniusr
-library(lubridate); library(stringr); library(ggpubr); library(dplyr); 
+library(lubridate); library(stringr); library(dplyr); 
 library(ggcorrplot); library(viridis); library(factoextra); library(ggplot2)
 Sys.setenv(SPOTIFY_CLIENT_ID = 'YOURKEY')
 Sys.setenv(SPOTIFY_CLIENT_SECRET = 'YOURKEY')

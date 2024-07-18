@@ -1,5 +1,5 @@
 # Run DanceParty.R first
-
+library(ggpubr)
 # Visual Exploration ------------------------------------------------------
 mycolors <- c("#54086B", "#FF0BAC", "#00BEC5", "#E34234")
 names(mycolors) <- levels(everyone$person)
